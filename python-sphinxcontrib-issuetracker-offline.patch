@@ -1,0 +1,13 @@
+--- sphinxcontrib-issuetracker-0.10.1/doc/conf.py.orig	2012-06-18 18:33:56.000000000 +0200
++++ sphinxcontrib-issuetracker-0.10.1/doc/conf.py	2012-08-31 21:28:36.154850626 +0200
+@@ -54,8 +54,8 @@
+ html_theme = 'default'
+ html_static_path = []
+ 
+-intersphinx_mapping = {'python': ('http://docs.python.org/', None),
+-                       'sphinx': ('http://sphinx.pocoo.org/', None)}
++intersphinx_mapping = {'python': ('http://docs.python.org/', 'python-objects.inv'),
++                       'sphinx': ('http://sphinx.pocoo.org/', 'sphinx-objects.inv')}
+ 
+ issuetracker = 'github'
+ issuetracker_project = 'lunaryorn/sphinxcontrib-issuetracker'
