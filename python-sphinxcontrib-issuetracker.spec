@@ -1,4 +1,3 @@
-# $Revision: 1.15 $, $Date: 2009/03/29 13:11:22 $
 #
 # Conditional build:
 %bcond_without	doc	# HTML documentation build
