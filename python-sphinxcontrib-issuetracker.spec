@@ -11,10 +11,10 @@ License:	BSD
 Group:		Development/Languages/Python
 Source0:	http://pypi.python.org/packages/source/s/sphinxcontrib-issuetracker/sphinxcontrib-issuetracker-%{version}.tar.gz
 # Source0-md5:	69c2f0e5770c5d7bad73f60f8d764e28
-Source1:	http://docs.python.org/objects.inv#/python-objects.inv
-# Source1-md5:	9128e774ec21dcd62dc5bca61cdd91ee
-Source2:	http://sphinx.pocoo.org/objects.inv#/sphinx-objects.inv
-# Source2-md5:	4db0b6eb4e1f4635ad02669e5b1ba15e
+Source1:	http://docs.python.org/objects.inv?/python-objects.inv
+# Source1-md5:	173c3f7fb1ad2162f1f194a5267700db
+Source2:	http://sphinx.pocoo.org/objects.inv?/sphinx-objects.inv
+# Source2-md5:	5f30379fe116fbace2636d5284df8622
 Patch0:		%{name}-offline.patch
 URL:		http://pypi.python.org/pypi/sphinxcontrib-issuetracker
 BuildRequires:	python-devel >= 1:2.6
