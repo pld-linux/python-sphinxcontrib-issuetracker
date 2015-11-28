@@ -46,7 +46,7 @@ zgłoszenia zapisany tekstowo (np. "#10").
 cp -p %{SOURCE1} %{SOURCE2} doc
 
 %build
-%{__python} setup.py build
+%py_build
 
 %if %{with doc}
 PYTHONPATH=$(pwd)/build/lib \
@@ -55,9 +55,7 @@ PYTHONPATH=$(pwd)/build/lib \
 
 %install
 rm -rf $RPM_BUILD_ROOT
-%{__python} setup.py install \
-	--optimize=2 \
-	--root=$RPM_BUILD_ROOT
+%py_install
 
 %py_postclean
 
