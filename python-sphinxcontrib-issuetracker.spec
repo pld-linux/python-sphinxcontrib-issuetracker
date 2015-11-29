@@ -19,7 +19,7 @@ Patch0:		%{name}-offline.patch
 URL:		http://pypi.python.org/pypi/sphinxcontrib-issuetracker
 BuildRequires:	python-devel >= 1:2.6
 BuildRequires:	rpm-pythonprov
-BuildRequires:	rpmbuild(macros) >= 1.219
+BuildRequires:	rpmbuild(macros) >= 1.710
 %if %{with doc}
 BuildRequires:	python-requests >= 0.13
 BuildRequires:	sphinx-pdg >= 1.1
