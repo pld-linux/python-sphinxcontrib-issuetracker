@@ -6,7 +6,7 @@ Summary:	Sphinx extension to reference issues in issue trackers
 Summary(pl.UTF-8):	Rozszerzenie Sphinksa do tworzenia odnośników do systemów śledzenia zgłoszeń
 Name:		python-sphinxcontrib-issuetracker
 Version:	0.11
-Release:	2
+Release:	3
 License:	BSD
 Group:		Development/Languages/Python
 Source0:	http://pypi.python.org/packages/source/s/sphinxcontrib-issuetracker/sphinxcontrib-issuetracker-%{version}.tar.gz
