@@ -111,7 +111,7 @@ rm -rf $RPM_BUILD_ROOT
 %if %{with python2}
 %files
 %defattr(644,root,root,755)
-%doc CHANGES.rst CREDITS LICENSE README.rst %{?with_doc:doc/_build3/html}
+%doc CHANGES.rst CREDITS LICENSE README.rst %{?with_doc:doc/_build2/html}
 # top dir should belong to python-Sphinx?
 %dir %{py_sitescriptdir}/sphinxcontrib
 %dir %{py_sitescriptdir}/sphinxcontrib/issuetracker
