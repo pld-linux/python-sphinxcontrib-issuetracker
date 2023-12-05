@@ -1,0 +1,360 @@
+--- sphinxcontrib-issuetracker-0.11/tests/test_setup.py.orig	2012-06-28 17:12:27.000000000 +0200
++++ sphinxcontrib-issuetracker-0.11/tests/test_setup.py	2023-11-23 21:50:15.985418978 +0100
+@@ -42,7 +42,7 @@ import re
+ BUILTIN_TRACKER_NAME_PATTERN = re.compile('lookup_(.*)_issue')
+ 
+ import pytest
+-from sphinx.environment import SphinxStandaloneReader
++from sphinx.io import SphinxStandaloneReader
+ 
+ from sphinxcontrib import issuetracker
+ from sphinxcontrib.issuetracker import resolvers
+--- sphinxcontrib-issuetracker-0.11/tests/conftest.py.orig	2023-11-25 17:17:51.597826211 +0100
++++ sphinxcontrib-issuetracker-0.11/tests/conftest.py	2023-11-25 17:49:32.277529346 +0100
+@@ -103,17 +103,6 @@ def assert_issue_xref(doctree, issue, ti
+     return reference
+ 
+ 
+-def pytest_namespace():
+-    """
+-    Add the following functions to the pytest namespace:
+-
+-    - :func:`get_index_doctree`
+-    - :func:`assert_issue_xref`
+-    """
+-    return dict((f.__name__, f) for f in
+-                (assert_issue_xref, assert_issue_pending_xref))
+-
+-
+ def pytest_addoption(parser):
+     """
+     Add --offline and --fast options to test runner.
+@@ -133,6 +122,8 @@ def pytest_configure(config):
+     """
+     config.run_fast = config.getvalue('fast')
+     config.run_offline = config.run_fast or config.getvalue('offline')
++    pytest.assert_issue_xref = assert_issue_xref
++    pytest.assert_issue_pending_xref = assert_issue_pending_xref
+ 
+ 
+ def pytest_runtest_setup(item):
+@@ -146,7 +137,8 @@ def pytest_runtest_setup(item):
+         pytest.skip('skipping slow test in fast mode')
+ 
+ 
+-def pytest_funcarg__content(request):
++@pytest.fixture
++def content(request):
+     """
+     The content for the test document as string.
+ 
+@@ -163,13 +155,14 @@ def pytest_funcarg__content(request):
+     if content_mark:
+         return content_mark.args[0]
+     else:
+-        issue_id = request.getfuncargvalue('issue_id')
++        issue_id = request.getfixturevalue('issue_id')
+         if issue_id:
+             return '#{0}'.format(issue_id)
+     raise ValueError('no content provided')
+ 
+ 
+-def pytest_funcarg__srcdir(request):
++@pytest.fixture
++def srcdir(request):
+     """
+     The Sphinx source directory for the current test as path.
+ 
+@@ -177,32 +170,35 @@ def pytest_funcarg__srcdir(request):
+     named ``index.rst``.  The content of this document is the return value of
+     the ``content`` funcarg.
+     """
+-    tmpdir = request.getfuncargvalue('tmpdir')
++    tmpdir = request.getfixturevalue('tmpdir')
+     srcdir = tmpdir.join('src')
+     srcdir.ensure(dir=True)
+     srcdir.join('conf.py').write(CONF_PY.encode('utf-8'), 'wb')
+-    content = request.getfuncargvalue('content')
++    content = request.getfixturevalue('content')
+     srcdir.join('index.rst').write(content.encode('utf-8'), 'wb')
+     return srcdir
+ 
+ 
+-def pytest_funcarg__outdir(request):
++@pytest.fixture
++def outdir(request):
+     """
+     The Sphinx output directory for the current test as path.
+     """
+-    tmpdir = request.getfuncargvalue('tmpdir')
++    tmpdir = request.getfixturevalue('tmpdir')
+     return tmpdir.join('html')
+ 
+ 
+-def pytest_funcarg__doctreedir(request):
++@pytest.fixture
++def doctreedir(request):
+     """
+     The Sphinx doctree directory for the current test as path.
+     """
+-    tmpdir = request.getfuncargvalue('tmpdir')
++    tmpdir = request.getfixturevalue('tmpdir')
+     return tmpdir.join('doctrees')
+ 
+ 
+-def pytest_funcarg__doctree(request):
++@pytest.fixture
++def doctree(request):
+     """
+     The transformed doctree of the ``content``.
+ 
+@@ -210,12 +206,13 @@ def pytest_funcarg__doctree(request):
+ 
+        This funcarg builds the application before test execution.
+     """
+-    app = request.getfuncargvalue('app')
++    app = request.getfixturevalue('app')
+     app.build()
+     return app.env.get_doctree('index')
+ 
+ 
+-def pytest_funcarg__resolved_doctree(request):
++@pytest.fixture
++def resolved_doctree(request):
+     """
+     The resolved doctree of the ``content``.
+ 
+@@ -223,12 +220,13 @@ def pytest_funcarg__resolved_doctree(req
+ 
+        This funcarg builds the application before test execution.
+     """
+-    app = request.getfuncargvalue('app')
++    app = request.getfixturevalue('app')
+     app.build()
+     return app.env.get_and_resolve_doctree('index', app.builder)
+ 
+ 
+-def pytest_funcarg__cache(request):
++@pytest.fixture
++def cache(request):
+     """
+     Return the issue tracker cache.
+ 
+@@ -236,21 +234,22 @@ def pytest_funcarg__cache(request):
+ 
+        This funcarg builds the application before test execution.
+     """
+-    app = request.getfuncargvalue('app')
++    app = request.getfixturevalue('app')
+     app.build()
+     return app.env.issuetracker_cache
+ 
+ 
+-def pytest_funcarg__index_html_file(request):
++@pytest.fixture
++def index_html_file(request):
+     """
+     Return the path of the ``index.html`` created by building.
+ 
+     This file contains the ``content`` rendered as HTML.  The ``app`` is build
+     by this funcarg to generate the ``index.html`` file.
+     """
+-    app = request.getfuncargvalue('app')
++    app = request.getfixturevalue('app')
+     app.build()
+-    outdir = request.getfuncargvalue('outdir')
++    outdir = request.getfixturevalue('outdir')
+     return outdir.join('index.html')
+ 
+ 
+@@ -267,7 +266,8 @@ def reset_global_state():
+     StandaloneHTMLBuilder.css_files.remove('_static/issuetracker.css')
+ 
+ 
+-def pytest_funcarg__confoverrides(request):
++@pytest.fixture
++def confoverrides(request):
+     """
+     Configuration value overrides for the current test as dictionary.
+ 
+@@ -281,7 +281,8 @@ def pytest_funcarg__confoverrides(reques
+     return confoverrides_marker.kwargs if confoverrides_marker else {}
+ 
+ 
+-def pytest_funcarg__app(request):
++@pytest.fixture
++def app(request):
+     """
+     A Sphinx application for testing.
+ 
+@@ -298,23 +299,24 @@ def pytest_funcarg__app(request):
+     build before returning it.  Otherwise you need to build explicitly in order
+     to get the output.
+     """
+-    srcdir = request.getfuncargvalue('srcdir')
+-    outdir = request.getfuncargvalue('outdir')
+-    doctreedir = request.getfuncargvalue('doctreedir')
+-    confoverrides = request.getfuncargvalue('confoverrides')
++    srcdir = request.getfixturevalue('srcdir')
++    outdir = request.getfixturevalue('outdir')
++    doctreedir = request.getfixturevalue('doctreedir')
++    confoverrides = request.getfixturevalue('confoverrides')
+     app = Sphinx(str(srcdir), str(srcdir), str(outdir), str(doctreedir),
+                  'html', confoverrides=confoverrides, status=None,
+                  warning=None, freshenv=True)
+     request.addfinalizer(reset_global_state)
+     if 'mock_lookup' in request.keywords:
+-        lookup_mock_issue = request.getfuncargvalue('mock_lookup')
++        lookup_mock_issue = request.getfixturevalue('mock_lookup')
+         app.connect(str('issuetracker-lookup-issue'), lookup_mock_issue)
+     if 'build_app' in request.keywords:
+         app.build()
+     return app
+ 
+ 
+-def pytest_funcarg__issue(request):
++@pytest.fixture
++def issue(request):
+     """
+     An :class:`~sphinxcontrib.issuetracker.Issue` for the current test, or
+     ``None``, if no issue is to be used.
+@@ -332,7 +334,8 @@ def pytest_funcarg__issue(request):
+     return None
+ 
+ 
+-def pytest_funcarg__issue_id(request):
++@pytest.fixture
++def issue_id(request):
+     """
+     The issue id for the current test, or ``None``, if no issue id is to be
+     used.
+@@ -341,14 +344,15 @@ def pytest_funcarg__issue_id(request):
+     the ``issue`` funcarg.  If the ``issue`` funcarg returns ``None``, this
+     funcarg also returns ``None``.
+     """
+-    issue = request.getfuncargvalue('issue')
++    issue = request.getfixturevalue('issue')
+     if issue:
+         return issue.id
+     else:
+         return None
+ 
+ 
+-def pytest_funcarg__mock_lookup(request):
++@pytest.fixture
++def mock_lookup(request):
+     """
+     A mocked callback for the ``issuetracker-lookup-issue`` event as
+     :class:`~mock.Mock` object.
+@@ -358,7 +362,7 @@ def pytest_funcarg__mock_lookup(request)
+     issue.  Otherwise it will always return ``None``.
+     """
+     lookup_mock_issue = Mock(name='lookup_mock_issue', return_value=None)
+-    issue = request.getfuncargvalue('issue')
++    issue = request.getfixturevalue('issue')
+     if issue:
+         def lookup(app, tracker_config, issue_id):
+             return issue if issue_id == issue.id else None
+--- sphinxcontrib-issuetracker-0.11/tests/test_builtin_trackers.py.orig	2013-01-17 11:52:44.000000000 +0100
++++ sphinxcontrib-issuetracker-0.11/tests/test_builtin_trackers.py	2023-11-25 17:54:31.892572858 +0100
+@@ -65,11 +65,12 @@ def pytest_generate_tests(metafunc):
+     unable to resolve the issue.
+     """
+     if 'issue' in metafunc.funcargnames:
+-        for testname in sorted(metafunc.cls.issues):
+-            metafunc.addcall(id=testname, param=testname)
++        testnames = sorted(metafunc.cls.issues)
++        metafunc.parametrize("issue", testnames, ids=testnames)
+ 
+ 
+-def pytest_funcarg__testname(request):
++@pytest.fixture
++def testname(request):
+     """
+     The testname as string, or ``None``, if no testname is known.
+ 
+@@ -79,7 +80,8 @@ def pytest_funcarg__testname(request):
+     return getattr(request, 'param', None)
+ 
+ 
+-def pytest_funcarg__tracker(request):
++@pytest.fixture
++def tracker(request):
+     """
+     The tracker name as string, or ``None``, if no tracker is known.
+ 
+@@ -92,7 +94,8 @@ def pytest_funcarg__tracker(request):
+     return request.cls.name
+ 
+ 
+-def pytest_funcarg__tracker_config(request):
++@pytest.fixture
++def tracker_config(request):
+     """
+     The tracker configuration as ``TrackerConfig`` object, or ``None``, if
+     there is no tracker configuration.
+@@ -114,7 +117,8 @@ def pytest_funcarg__tracker_config(reque
+         return cls.tracker_config.get(testname, cls.default_tracker_config)
+ 
+ 
+-def pytest_funcarg__confoverrides(request):
++@pytest.fixture
++def confoverrides(request):
+     """
+     Confoverrides for this test as dictionary.
+ 
+@@ -126,10 +130,10 @@ def pytest_funcarg__confoverrides(reques
+     """
+     # configure tracker and enable title expansion to test the title retrieval
+     # of builtin trackers, too
+-    tracker = request.getfuncargvalue('tracker')
++    tracker = request.getfixturevalue('tracker')
+     confoverrides = dict(issuetracker=tracker,
+                          issuetracker_title_template='{issue.title}')
+-    tracker_config = request.getfuncargvalue('tracker_config')
++    tracker_config = request.getfixturevalue('tracker_config')
+     if tracker_config:
+         # bring tracker configuration in
+         confoverrides.update(issuetracker_project=tracker_config.project,
+@@ -138,11 +142,12 @@ def pytest_funcarg__confoverrides(reques
+     if request.cls:
+         confoverrides.update(request.cls.confoverrides)
+     # add overrides from the test itself
+-    confoverrides.update(request.getfuncargvalue('confoverrides'))
++    confoverrides.update(request.getfixturevalue('confoverrides'))
+     return confoverrides
+ 
+ 
+-def pytest_funcarg__issue_id(request):
++@pytest.fixture
++def issue_id(request):
+     """
+     The issue id of this test as string, or ``None``, if this test doesn't have
+     a ``testname``.
+@@ -150,14 +155,15 @@ def pytest_funcarg__issue_id(request):
+     The issue id is taken from the issue defined in the ``issues`` attribute of
+     the class this test is defined in.
+     """
+-    testname = request.getfuncargvalue('testname')
++    testname = request.getfixturevalue('testname')
+     if not testname:
+         return None
+     issue = request.cls.issues[testname]
+     return issue.id if isinstance(issue, Issue) else issue
+ 
+ 
+-def pytest_funcarg__issue(request):
++@pytest.fixture
++def issue(request):
+     """
+     The issue object for this test, or ``None``, if the test is expected to be
+     unable to resolve the issue.
+@@ -165,7 +171,7 @@ def pytest_funcarg__issue(request):
+     The issue id is taken from the issue defined in the ``issues`` attribute of
+     the class this test is defined in.
+     """
+-    testname = request.getfuncargvalue('testname')
++    testname = request.getfixturevalue('testname')
+     issue = request.cls.issues[testname]
+     return issue if isinstance(issue, Issue) else None
+ 
